@@ -8,8 +8,8 @@
         <br>
       </template>
     </div>
-    <img class="rabbit perfect_center" src="../images/rabbit.png" alt="">
-    <div
+    <img class="rabbit perfect_center" :style="rabbitRotate" src="../images/rabbit.png" alt="">
+    <!--<div
       v-show="show"
       v-hotkey="{
         'esc': onClose,
@@ -20,14 +20,14 @@
     </div>
     <button v-clipboard="Copy_to_clipboard">
       Copy to clipboard
-    </button>
-    
+    </button>-->
+
   </div>
 </template>
 
 <script>
   import square from './square.vue';
-  
+
   export default {
     name: 'gamebox',
     components: {
@@ -55,52 +55,21 @@
           ['0', '1', '1', '1', '0'],
           ['0', '0', '1', '0', '0'],
         ],
+        way:[
+          [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2]
+        ],
         mapDataOrigin: {
           transform: 'translate(0, 0)'
         },
-        show: true
+        show: true,
+        rabbitRotate: {}
       }
     },
     computed: {
-    
+
     },
     watch: {
-      nowPoint:function (n,o) {
-        console.log(n,o);
-        console.log('nowPoint');
-        this.mapDataOrigin = {
-          transform: 'translate(-'+ (this.nowPoint[0] - 2) * 150 + 'px, -'+ (this.nowPoint[1] - 2) * 150 + 'px)'
-        }
-      }
-    },
-    created(){
-      const that = this;
-      console.log('that.nowPoint-->>>',that.nowPoint);
-      let point = this.nowPoint;
-      document.onkeydown = function (e) {
-        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
-        let key = e1.keyCode;
-        switch (key) {
-          case 37:
-            // 左
-            point[1] += 1;
-            break;
-          case 38:
-            // 上
-            point[0] -= 1;
-            break;
-          case 39:
-            // 右
-            point[1] -= 1;
-            break;
-          case 40:
-            // 下
-            point[0] += 1;
-            break;
-        }
-        that.nowPoint = point;
-        console.log(that.nowPoint);
-      }
+
     },
     methods: {
       onClose:function () {
@@ -111,10 +80,106 @@
       },
       Copy_to_clipboard:function () {
         return 'zyy张延勇hazdt_ziang'
+      },
+      updateOrigin:function (key, point, rotate) {
+        var that = this;
+        this.nowPoint = point;
+        this.mapDataOrigin = {transform: 'translate('+ (point[0] - 2) * 150 + 'px, '+ (point[1] - 2) * 150 + 'px)'};
+        if(key == 37 || key == 38 || key == 39 || key == 40){
+          var rotate = 'translate(-50%, -50%) rotate('+ rotate +'deg)'
+          this.rabbitRotate = {transform: rotate + ' scaleX(0.5)'};
+          setTimeout(function () {
+            that.rabbitRotate = {transform: rotate};
+            that.judgment();
+          },100)
+        }
+      },
+      judgment: function () {
+        console.log('this.nowPoint-->>>',this.nowPoint);
+        console.log('this.list-->>>', this.list);
+        // 地图列表
+        const list = this.list;
+        // 正确路线
+        const way = this.way;
+        // 默认位置
+        const origin = this.origin;
+        // 当前位置
+        const nowPoint = this.nowPoint;
+        // 转换成list数组对应的下标
+        const pos = [2 * origin[1] - nowPoint[1], 2 * origin[0] - nowPoint[0]];
+        console.log(pos);
+        // 获取当前位置及其周围的值
+        /*const pos_val = {
+          // 上
+          t: list[pos[1] - 1][pos[0]],
+          // 右
+          r: list[pos[1]][pos[0] + 1],
+          // 下
+          b: list[pos[1] + 1][pos[0]],
+          // 左
+          l: list[pos[1]][pos[0] - 1],
+          // 中间
+          m: list[pos[1]][pos[0]]
+        };*/
+        list[pos[0]][pos[1]] *= 1;
+        this.list = list;
+        let status = false;
+        for (let i in way) {
+          const item = way[i];
+          status = pos[0] === item[0] && pos[1] === item[1];
+          if (status) {
+            break;
+          }
+        }
+        if (status) {
+          const lastPoint = way[way.length-1];
+          if(lastPoint[0] === pos[0] && lastPoint[1] === pos[1]){
+            setTimeout(function () {
+              alert('通过');
+            }, 100)
+          }
+        } else {
+          setTimeout(function () {
+            alert('游戏结束！');
+          }, 100)
+        }
       }
     },
-    mounted() {
+    created(){
     
+    },
+    mounted() {
+      const that = this;
+      let point = this.nowPoint;
+      document.onkeydown = function (e) {
+        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
+        let key = e1.keyCode;
+
+        var rotate = 0;
+        switch (key) {
+          case 37:
+            // 左
+            point[0] += 1;
+            rotate = 90;
+            break;
+          case 38:
+            // 上
+            point[1] += 1;
+            rotate = 180;
+            break;
+          case 39:
+            // 右
+            point[0] -= 1;
+            rotate = -90;
+            break;
+          case 40:
+            // 下
+            point[1] -= 1;
+            rotate = 0;
+            break;
+        }
+        that.updateOrigin(key, point, rotate);
+      }
     }
   }
 </script>
@@ -133,7 +198,7 @@
     width: 750px;
     height: 750px;
     overflow: hidden;
-    
+
     .move_box {
       position: absolute;
       top: 0;
@@ -144,9 +209,10 @@
       -o-transition: all .3s;
       transition: all .3s;
     }
-    
+
     .rabbit {
       z-index: 2;
+      transform-origin: center center;
     }
   }
 </style>

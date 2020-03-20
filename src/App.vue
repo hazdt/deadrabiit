@@ -111,12 +111,13 @@ export default {
     -moz-box-pack: center;
     height: 100%;
   }
-  
+
   #app {
     position: relative;
     width: 100vw;
     height: 100vh;
     background-color: #000;
+    color: #fff;
     overflow: hidden;
   }
 </style>
